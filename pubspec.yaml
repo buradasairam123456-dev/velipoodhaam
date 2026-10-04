@@ -1,15 +1,14 @@
-name: velipoodhaam
-description: velipooodhaam 5.2 travel app
+name: trip_ki_velthaam
+description: Trip Ki Velthaam - Travel App by Sai Ram Charan
 publish_to: 'none'
 version: 1.0.0+1
-
 environment:
   sdk: '>=3.0.0 <4.0.0'
-
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-
+  url_launcher: ^6.2.5
+  share_plus: ^8.0.2
+  google_generative_ai: ^0.4.4
 flutter:
   uses-material-design: true
