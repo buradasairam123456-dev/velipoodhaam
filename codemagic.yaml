@@ -10,17 +10,19 @@ workflows:
       - name: Fix SDK and Build
         script: |
           flutter create . --platforms=android --no-overwrite
-          python3 -c "
+          cat > /tmp/fix.py << 'PY'
           import pathlib, re
-          p=pathlib.Path('android/app/build.gradle').read_text()
-          p=re.sub(r'compileSdkVersion\s+\d+','compileSdkVersion 34',p)
-          p=re.sub(r'compileSdk\s+\d+','compileSdk 34',p)
-          p=re.sub(r'targetSdkVersion\s+\d+','targetSdkVersion 34',p)
-          p=re.sub(r'targetSdk\s+\d+','targetSdk 34',p)
-          pathlib.Path('android/app/build.gradle').write_text(p)
-          print(p[:500])
-          "
+          f=pathlib.Path('android/app/build.gradle')
+          t=f.read_text()
+          t=re.sub(r'compileSdkVersion\s+\d+','compileSdkVersion 34',t)
+          t=re.sub(r'compileSdk\s+\d+','compileSdk 34',t)
+          t=re.sub(r'targetSdkVersion\s+\d+','targetSdkVersion 34',t)
+          t=re.sub(r'targetSdk\s+\d+','targetSdk 34',t)
+          f.write_text(t)
+          print('fixed to 34')
+          PY
+          python3 /tmp/fix.py
           flutter pub get
-          flutter build apk --debug -v
+          flutter build apk --debug
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
