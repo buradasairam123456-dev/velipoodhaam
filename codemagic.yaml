@@ -1,19 +1,21 @@
 workflows:
   android-workflow:
-    name: Android Debug APK
+    name: Android Fix Build
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.24.5
+      flutter: 3.22.3
       java: 17
     scripts:
-      - name: Fix android folder and SDK
+      - name: Recreate android and fix SDK 34
         script: |
           flutter create . --platforms=android
-          find . -name "build.gradle" -type f -exec sed -i -e 's/compileSdkVersion.*/compileSdkVersion 34/' -e 's/compileSdk .*/compileSdk 34/' -e 's/targetSdkVersion.*/targetSdkVersion 34/' -e 's/targetSdk .*/targetSdk 34/' {} \;
+          sed -i -e 's/compileSdkVersion.*/compileSdkVersion 34/' -e 's/compileSdk .*/compileSdk 34/' android/app/build.gradle
+          sed -i -e 's/targetSdkVersion.*/targetSdkVersion 34/' -e 's/targetSdk .*/targetSdk 34/' android/app/build.gradle
+          sed -i -e 's/compileSdkVersion.*/compileSdkVersion 34/' android/build.gradle || true
+          cat android/app/build.gradle
       - name: Build APK
         script: |
-          flutter clean
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug --verbose
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
