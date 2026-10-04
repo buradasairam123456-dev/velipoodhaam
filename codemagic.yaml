@@ -2,19 +2,25 @@ workflows:
   android-workflow:
     name: Android Debug APK
     instance_type: mac_mini_m2
+    max_build_duration: 30
     environment:
       flutter: 3.24.5
       java: 17
     scripts:
-      - name: Fix android folder
+      - name: FORCE SDK 34
         script: |
           flutter create . --platforms=android --no-overwrite
-          find android -name "*.gradle" -exec sed -i -e 's/compileSdkVersion 33/compileSdkVersion 34/g' -e 's/compileSdk 33/compileSdk 34/g' -e 's/targetSdkVersion 33/targetSdkVersion 34/g' -e 's/targetSdk 33/targetSdk 34/g' {} \;
-          cat android/app/build.gradle | grep -i Sdk
-      - name: Build Debug APK
+          sed -i '' 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle || sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle
+          sed -i '' 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle || sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle
+          sed -i '' 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle || sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle
+          sed -i '' 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle || sed -i 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle
+          # also fix local.properties
+          echo "flutter.compileSdkVersion=34" >> android/local.properties
+          echo "flutter.targetSdkVersion=34" >> android/local.properties
+          cat android/app/build.gradle
+      - name: Build APK
         script: |
-          flutter clean
           flutter pub get
-          flutter build apk --debug --verbose
+          flutter build apk --debug
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
