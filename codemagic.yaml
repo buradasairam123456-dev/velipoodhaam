@@ -1,26 +1,26 @@
 workflows:
   android-workflow:
     name: Android Debug APK
+    max_build_duration: 20
     instance_type: mac_mini_m2
-    max_build_duration: 30
     environment:
-      flutter: 3.24.5
+      flutter: stable
       java: 17
     scripts:
-      - name: FORCE SDK 34
+      - name: Fix SDK and Build
         script: |
           flutter create . --platforms=android --no-overwrite
-          sed -i '' 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle || sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle
-          sed -i '' 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle || sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle
-          sed -i '' 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle || sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle
-          sed -i '' 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle || sed -i 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle
-          # also fix local.properties
-          echo "flutter.compileSdkVersion=34" >> android/local.properties
-          echo "flutter.targetSdkVersion=34" >> android/local.properties
-          cat android/app/build.gradle
-      - name: Build APK
-        script: |
+          python3 -c "
+          import pathlib, re
+          p=pathlib.Path('android/app/build.gradle').read_text()
+          p=re.sub(r'compileSdkVersion\s+\d+','compileSdkVersion 34',p)
+          p=re.sub(r'compileSdk\s+\d+','compileSdk 34',p)
+          p=re.sub(r'targetSdkVersion\s+\d+','targetSdkVersion 34',p)
+          p=re.sub(r'targetSdk\s+\d+','targetSdk 34',p)
+          pathlib.Path('android/app/build.gradle').write_text(p)
+          print(p[:500])
+          "
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug -v
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
