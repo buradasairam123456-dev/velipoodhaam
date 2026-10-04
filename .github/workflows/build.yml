@@ -12,11 +12,11 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-      - run: flutter create. --platforms=android
+           - run: flutter create . --platforms=android
       - run: sed -i 's/android:label=".*"/android:label="Trip ki velthaam"/' android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk 
