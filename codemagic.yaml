@@ -1,24 +1,20 @@
 workflows:
   android-workflow:
-    name: Android Fix Build
+    name: Android Debug APK
     instance_type: mac_mini_m2
     environment:
       flutter: 3.24.5
       java: 17
     scripts:
-      - name: Fix SDK to 34 forcefully
+      - name: Fix android folder
         script: |
           flutter create . --platforms=android --no-overwrite
-          echo "compileSdk 34" > /tmp/fix
-          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle || true
-          sed -i 's/compileSdk .*/compileSdk 34/' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle || true
-          sed -i 's/targetSdk .*/targetSdk 34/' android/app/build.gradle || true
-          sed -i 's/flutter.compileSdkVersion.*/34/' android/local.properties || true
-          grep -r "compileSdkVersion 33" android/ || echo "No 33 found - Good"
-      - name: Build APK
+          find android -name "*.gradle" -exec sed -i -e 's/compileSdkVersion 33/compileSdkVersion 34/g' -e 's/compileSdk 33/compileSdk 34/g' -e 's/targetSdkVersion 33/targetSdkVersion 34/g' -e 's/targetSdk 33/targetSdk 34/g' {} \;
+          cat android/app/build.gradle | grep -i Sdk
+      - name: Build Debug APK
         script: |
+          flutter clean
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --debug --verbose
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
