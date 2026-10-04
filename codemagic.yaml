@@ -1,20 +1,25 @@
 workflows:
   android-workflow:
-    name: Android Debug Build
+    name: Android Fix Final
     instance_type: mac_mini_m2
     max_build_duration: 20
     environment:
       flutter: stable
       java: 17
     scripts:
-      - name: Clean and Recreate Android
+      - name: Recreate and Fix Android
         script: |
           flutter clean
           rm -rf android
           flutter create . --platforms=android --project-name velipoodhaam --org com.velipoodhaam.trip
           flutter pub get
-      - name: Build DEBUG APK
+          # Fix compileSdk and targetSdk to 34
+          sed -i '' 's/compileSdk.*/compileSdk 34/' android/app/build.gradle || sed -i 's/compileSdk.*/compileSdk 34/' android/app/build.gradle
+          sed -i '' 's/targetSdk.*/targetSdk 34/' android/app/build.gradle || sed -i 's/targetSdk.*/targetSdk 34/' android/app/build.gradle
+          sed -i '' 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle || true
+          sed -i '' 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle || true
+      - name: Build Debug APK
         script: |
-          flutter build apk --debug
+          flutter build apk --debug --verbose
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
