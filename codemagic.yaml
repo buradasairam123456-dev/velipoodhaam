@@ -4,9 +4,11 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Create Android Folder
-        script: flutter create . --platforms=android
-      - name: Get Packages
+      - name: Recreate Android folder
+        script: |
+          rm -rf android
+          flutter create . --platforms=android --project-name velipoodhaam --overwrite
+      - name: Get packages
         script: flutter pub get
       - name: Build APK
         script: flutter build apk --release
