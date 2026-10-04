@@ -7,9 +7,13 @@ workflows:
       - name: Recreate Android folder
         script: |
           rm -rf android
-          flutter create . --platforms=android --project-name velipoodhaam --overwrite
+          flutter create . --platforms=android
       - name: Get packages
         script: flutter pub get
+      - name: ADD INTERNET PERMISSION - PHOTOS FIX
+        script: |
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET" \/>\n <application/' android/app/src/main/AndroidManifest.xml
+          echo "Internet Permission Added!"
       - name: Build APK
         script: flutter build apk --release
     artifacts:
