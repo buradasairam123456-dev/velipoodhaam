@@ -1,38 +1,19 @@
 workflows:
   android-workflow:
-    name: Android APK Fixed
+    name: Android Debug APK
     instance_type: mac_mini_m2
-    max_build_duration: 25
     environment:
       flutter: 3.24.5
-      xcode: latest
-      cocoapods: default
       java: 17
     scripts:
-      - name: Clean and Fix Project
+      - name: Fix android folder and SDK
+        script: |
+          flutter create . --platforms=android
+          find . -name "build.gradle" -type f -exec sed -i -e 's/compileSdkVersion.*/compileSdkVersion 34/' -e 's/compileSdk .*/compileSdk 34/' -e 's/targetSdkVersion.*/targetSdkVersion 34/' -e 's/targetSdk .*/targetSdk 34/' {} \;
+      - name: Build APK
         script: |
           flutter clean
-          rm -rf android
-          flutter create . --platforms=android --project-name velipoodhaam --org com.velipoodhaam.app
-          # Force compileSdk 34 in app level
-          cat > android/local.properties <<EOF
-          sdk.dir=$ANDROID_SDK_ROOT
-          flutter.sdk=$HOME/programs/flutter
-          flutter.buildMode=debug
-          flutter.versionName=1.0.0
-          flutter.versionCode=1
-          EOF
           flutter pub get
-      - name: Fix compileSdk
-        script: |
-          sed -i -e 's/compileSdk.*/compileSdk 34/' -e 's/targetSdk.*/targetSdk 34/' -e 's/compileSdkVersion.*/compileSdkVersion 34/' -e 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
-          cat android/app/build.gradle
-      - name: Build APK Debug
-        script: |
           flutter build apk --debug
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
-    publishing:
-      email:
-        recipients:
-          - sai@example.com
