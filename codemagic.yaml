@@ -1,27 +1,13 @@
 workflows:
-  android-workflow:
-    name: Android APK
-    max_build_duration: 30
-    instance_type: mac_mini_m2
+  android:
+    name: android
     environment:
       flutter: stable
       java: 17
     scripts:
-      - name: Fix SDK to 34
+      - name: build
         script: |
-          flutter create . --platforms=android --no-overwrite
-          python3 << 'PY'
-          import pathlib, re
-          for p in pathlib.Path("android").rglob("build.gradle*"):
-              txt = p.read_text()
-              txt = re.sub(r'compileSdk.*', 'compileSdk 34', txt)
-              txt = re.sub(r'compileSdkVersion.*', 'compileSdkVersion 34', txt)
-              txt = re.sub(r'compileSdk\s*=\s*\d+', 'compileSdk = 34', txt)
-              p.write_text(txt)
-              print(f"Fixed {p}")
-          PY
-      - name: Build APK
-        script: |
+          flutter create . --platforms=android
           flutter pub get
           flutter build apk --debug
     artifacts:
