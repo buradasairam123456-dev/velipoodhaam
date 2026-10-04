@@ -1,20 +1,20 @@
 workflows:
   android-workflow:
-    name: Android Build Fix
+    name: Android Debug Build
     instance_type: mac_mini_m2
     max_build_duration: 20
     environment:
       flutter: stable
       java: 17
     scripts:
-      - name: Clean Old Android
+      - name: Clean and Recreate Android
         script: |
           flutter clean
           rm -rf android
-          flutter create . --platforms=android --org com.sklmtrip.velipoodhaam --project-name velipoodhaam
+          flutter create . --platforms=android --project-name velipoodhaam --org com.velipoodhaam.trip
           flutter pub get
-      - name: Build APK
+      - name: Build DEBUG APK
         script: |
-          flutter build apk --release --no-tree-shake-icons -v
+          flutter build apk --debug
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
