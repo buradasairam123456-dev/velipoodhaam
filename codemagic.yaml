@@ -1,26 +1,23 @@
 workflows:
   android-workflow:
-    name: VAYVI Android Build
+    name: Velipoodhaam Build
+    max_build_duration: 20
     instance_type: mac_mini_m2
-    max_build_duration: 60
     environment:
-      flutter: stable
+      flutter: 3.22.0
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Get Flutter packages
+      - name: Create and Patch Android
         script: |
-          flutter clean
+          flutter create . --platforms=android --org com.velipoodhaam.vayvi
+          sed -i '' 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/' android/app/build.gradle || sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/' android/app/build.gradle
+          sed -i '' 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle || sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
+      - name: Get dependencies
+        script: |
           flutter pub get
-      - name: Generate launcher icons
+      - name: Build split APKs
         script: |
-          flutter pub run flutter_launcher_icons
-      - name: Build Small APK (50MB target)
-        script: |
-          flutter build apk --release --split-per-abi --obfuscate --tree-shake-icons --shrink
+          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=./symbols --no-tree-shake-icons
     artifacts:
-      - build/**/outputs/**/*.apk
-    publishing:
-      email:
-        recipients:
-          - buradasairam123456@gmail.com
+      - build/app/outputs/flutter-apk/*.apk
