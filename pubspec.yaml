@@ -1,18 +1,32 @@
-name: velipoodhaam
-description: TRIP KI VELTHAAM by Sai Ram Charan SKLM - Travel App
+name: velipooodhaam
+description: VAYVI 5.2 travel app - Velipooodhaam
 publish_to: 'none'
-version: 1.0.0+1
+version: 5.2.0+52
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.10.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher: ^6.2.2
-  share_plus: ^7.2.1
-  http: ^1.2.0
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "icon-192.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "icon-192.png"
+    background_color: "#000000"
+    theme_color: "#D4AF37"
