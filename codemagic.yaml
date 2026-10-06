@@ -4,15 +4,21 @@ workflows:
     max_build_duration: 20
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.22.0
+      flutter: 3.29.2
       xcode: latest
       cocoapods: default
     scripts:
       - name: Create and Patch Android
         script: |
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          sed -i '' 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/' android/app/build.gradle || sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/' android/app/build.gradle
-          sed -i '' 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle || sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/' android/app/build.gradle
+          # Patch ALL formats
+          sed -i.bak 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/g' android/app/build.gradle || true
+          sed -i.bak 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/g' android/app/build.gradle || true
+          sed -i.bak 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/g' android/app/build.gradle || true
+          sed -i.bak 's/targetSdk = flutter.targetSdkVersion/targetSdk = 34/g' android/app/build.gradle || true
+          sed -i.bak 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle || true
+          sed -i.bak 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle || true
+          cat android/app/build.gradle
       - name: Get dependencies
         script: |
           flutter pub get
