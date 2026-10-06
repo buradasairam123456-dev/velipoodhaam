@@ -8,28 +8,49 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create and REAL PATCH for gradle.kts
+      - name: Create and HARDCODE 34
         script: |
           rm -rf android
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          echo "--- Files ---"
-          find android -type f | grep gradle
-          echo "--- Patching ALL gradle files ---"
-          for f in $(find android -type f -name "*.gradle*"); do
-            echo "Patching $f"
-            sed -i.bak "s/flutter.compileSdkVersion/34/g" "$f" || true
-            sed -i.bak "s/flutter.targetSdkVersion/34/g" "$f" || true
-            sed -i.bak "s/flutter.minSdkVersion/21/g" "$f" || true
-          done
-          echo "--- AFTER ---"
-          grep -rn "compileSdk" android/app/ || true
-          cat android/app/build.gradle.kts 2>/dev/null || cat android/app/build.gradle
-      - name: Upgrade plugins
+          echo "--- OVERWRITING build.gradle.kts WITH 34 ---"
+          cat > android/app/build.gradle.kts << 'EOF'
+          plugins {
+              id("com.android.application")
+              id("kotlin-android")
+              id("dev.flutter.flutter-gradle-plugin")
+          }
+          android {
+              namespace = "com.velipoodhaam.vayvi"
+              compileSdk = 34
+              ndkVersion = flutter.ndkVersion
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = JavaVersion.VERSION_17.toString()
+              }
+              defaultConfig {
+                  applicationId = "com.velipoodhaam.vayvi"
+                  minSdk = 21
+                  targetSdk = 34
+                  versionCode = flutter.versionCode
+                  versionName = flutter.versionName
+              }
+              buildTypes {
+                  release {
+                      signingConfig = signingConfigs.getByName("debug")
+                  }
+              }
+          }
+          flutter {
+              source = "../.."
+          }
+          EOF
+          cat android/app/build.gradle.kts
+      - name: Build APK
         script: |
-          flutter pub upgrade
           flutter pub get
-      - name: Build APKs
-        script: |
           flutter build apk --release --split-per-abi --no-tree-shake-icons
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
