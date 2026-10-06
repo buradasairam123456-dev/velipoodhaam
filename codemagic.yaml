@@ -8,11 +8,15 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create and FORCE 34 for ALL
+      - name: UPGRADE share_plus and FORCE 35
         script: |
+          echo "--- Upgrading share_plus to latest ---"
+          cat pubspec.yaml | grep share_plus
+          sed -i.bak 's/share_plus:.*/share_plus: ^11.0.0/' pubspec.yaml || true
+          sed -i.bak 's/share_plus: ^.*/share_plus: ^11.0.0/' pubspec.yaml || true
+          grep share_plus pubspec.yaml
           rm -rf android
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          # 1. Force APP to 34
           cat > android/app/build.gradle.kts << 'EOF'
           plugins {
               id("com.android.application")
@@ -21,7 +25,7 @@ workflows:
           }
           android {
               namespace = "com.velipoodhaam.vayvi"
-              compileSdk = 34
+              compileSdk = 35
               ndkVersion = flutter.ndkVersion
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
@@ -33,7 +37,7 @@ workflows:
               defaultConfig {
                   applicationId = "com.velipoodhaam.vayvi"
                   minSdk = 21
-                  targetSdk = 34
+                  targetSdk = 35
                   versionCode = flutter.versionCode
                   versionName = flutter.versionName
               }
@@ -47,43 +51,10 @@ workflows:
               source = "../.."
           }
           EOF
-          # 2. Force ALL LIBRARIES like share_plus to 34
-          cat > android/build.gradle.kts << 'EOF'
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          val newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
-          rootProject.layout.buildDirectory.value(newBuildDir)
-          subprojects {
-              val newSubBuildDir = newBuildDir.dir(project.name)
-              project.layout.buildDirectory.value(newSubBuildDir)
-          }
-          subprojects {
-              project.evaluationDependsOn(":app")
-          }
-          tasks.register<Delete>("clean") {
-              delete(rootProject.layout.buildDirectory)
-          }
-          subprojects {
-              afterEvaluate {
-                  if (hasProperty("android")) {
-                      val androidExtension = extensions.findByName("android")
-                      if (androidExtension is com.android.build.gradle.BaseExtension) {
-                          androidExtension.compileSdkVersion(34)
-                      }
-                  }
-              }
-          }
-          EOF
-          echo "--- APP ---"
           cat android/app/build.gradle.kts
-          echo "--- ROOT ---"
-          cat android/build.gradle.kts
       - name: Build APK
         script: |
+          flutter pub upgrade share_plus
           flutter pub get
           flutter build apk --release --split-per-abi --no-tree-shake-icons
     artifacts:
