@@ -8,29 +8,28 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create Android and NUCLEAR PATCH to 34
+      - name: Create and REAL PATCH for gradle.kts
         script: |
           rm -rf android
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          echo "--- BEFORE PATCH ---"
-          grep -n "compileSdk" android/app/build.gradle
-          # NUCLEAR: Replace entire line containing compileSdk
-          find android -type f -name "*.gradle" | xargs sed -i '' 's/.*compileSdk.*/    compileSdk = 34/g' || find android -type f -name "*.gradle" | xargs sed -i 's/.*compileSdk.*/    compileSdk = 34/g'
-          find android -type f -name "*.gradle" | xargs sed -i '' 's/.*targetSdk.*/    targetSdk = 34/g' || find android -type f -name "*.gradle" | xargs sed -i 's/.*targetSdk.*/    targetSdk = 34/g'
-          find android -type f -name "*.gradle" | xargs sed -i '' 's/.*compileSdkVersion.*/    compileSdkVersion 34/g' || find android -type f -name "*.gradle" | xargs sed -i 's/.*compileSdkVersion.*/    compileSdkVersion 34/g'
-          # FORCE via local.properties
-          echo "flutter.compileSdkVersion=34" >> android/local.properties
-          echo "flutter.targetSdkVersion=34" >> android/local.properties
-          echo "flutter.minSdkVersion=21" >> android/local.properties
-          echo "--- AFTER PATCH ---"
-          grep -n "compileSdk" android/app/build.gradle
-          cat android/app/build.gradle
-      - name: Force upgrade all plugins to support 34
+          echo "--- Files ---"
+          find android -type f | grep gradle
+          echo "--- Patching ALL gradle files ---"
+          for f in $(find android -type f -name "*.gradle*"); do
+            echo "Patching $f"
+            sed -i.bak "s/flutter.compileSdkVersion/34/g" "$f" || true
+            sed -i.bak "s/flutter.targetSdkVersion/34/g" "$f" || true
+            sed -i.bak "s/flutter.minSdkVersion/21/g" "$f" || true
+          done
+          echo "--- AFTER ---"
+          grep -rn "compileSdk" android/app/ || true
+          cat android/app/build.gradle.kts 2>/dev/null || cat android/app/build.gradle
+      - name: Upgrade plugins
         script: |
           flutter pub upgrade
           flutter pub get
-      - name: Build split APKs
+      - name: Build APKs
         script: |
-          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=./symbols --no-tree-shake-icons
+          flutter build apk --release --split-per-abi --no-tree-shake-icons
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
