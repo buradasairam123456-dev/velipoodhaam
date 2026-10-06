@@ -1,30 +1,33 @@
 workflows:
   android-workflow:
     name: Velipoodhaam Build
-    max_build_duration: 20
+    max_build_duration: 25
     instance_type: mac_mini_m2
     environment:
       flutter: 3.32.0
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create and Force Patch to 34
+      - name: Create Android and NUCLEAR PATCH to 34
         script: |
+          rm -rf android
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          # FORCE 34 with perl - pakka work
-          perl -i -pe 's/compileSdkVersion.*/compileSdkVersion 34/g' android/app/build.gradle || true
-          perl -i -pe 's/compileSdk = .*/compileSdk = 34/g' android/app/build.gradle || true
-          perl -i -pe 's/targetSdkVersion.*/targetSdkVersion 34/g' android/app/build.gradle || true
-          perl -i -pe 's/targetSdk = .*/targetSdk = 34/g' android/app/build.gradle || true
-          # also force in local.properties
+          echo "--- BEFORE PATCH ---"
+          grep -n "compileSdk" android/app/build.gradle
+          # NUCLEAR: Replace entire line containing compileSdk
+          find android -type f -name "*.gradle" | xargs sed -i '' 's/.*compileSdk.*/    compileSdk = 34/g' || find android -type f -name "*.gradle" | xargs sed -i 's/.*compileSdk.*/    compileSdk = 34/g'
+          find android -type f -name "*.gradle" | xargs sed -i '' 's/.*targetSdk.*/    targetSdk = 34/g' || find android -type f -name "*.gradle" | xargs sed -i 's/.*targetSdk.*/    targetSdk = 34/g'
+          find android -type f -name "*.gradle" | xargs sed -i '' 's/.*compileSdkVersion.*/    compileSdkVersion 34/g' || find android -type f -name "*.gradle" | xargs sed -i 's/.*compileSdkVersion.*/    compileSdkVersion 34/g'
+          # FORCE via local.properties
           echo "flutter.compileSdkVersion=34" >> android/local.properties
           echo "flutter.targetSdkVersion=34" >> android/local.properties
           echo "flutter.minSdkVersion=21" >> android/local.properties
-          echo "--- FINAL build.gradle ---"
+          echo "--- AFTER PATCH ---"
+          grep -n "compileSdk" android/app/build.gradle
           cat android/app/build.gradle
-      - name: Upgrade share_plus to support 34
+      - name: Force upgrade all plugins to support 34
         script: |
-          flutter pub upgrade share_plus
+          flutter pub upgrade
           flutter pub get
       - name: Build split APKs
         script: |
