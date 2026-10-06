@@ -4,23 +4,27 @@ workflows:
     max_build_duration: 20
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.29.2
+      flutter: 3.32.0
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create and Patch Android
+      - name: Create and Force Patch to 34
         script: |
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          # Patch ALL formats
-          sed -i.bak 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 34/g' android/app/build.gradle || true
-          sed -i.bak 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/g' android/app/build.gradle || true
-          sed -i.bak 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 34/g' android/app/build.gradle || true
-          sed -i.bak 's/targetSdk = flutter.targetSdkVersion/targetSdk = 34/g' android/app/build.gradle || true
-          sed -i.bak 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle || true
-          sed -i.bak 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle || true
+          # FORCE 34 with perl - pakka work
+          perl -i -pe 's/compileSdkVersion.*/compileSdkVersion 34/g' android/app/build.gradle || true
+          perl -i -pe 's/compileSdk = .*/compileSdk = 34/g' android/app/build.gradle || true
+          perl -i -pe 's/targetSdkVersion.*/targetSdkVersion 34/g' android/app/build.gradle || true
+          perl -i -pe 's/targetSdk = .*/targetSdk = 34/g' android/app/build.gradle || true
+          # also force in local.properties
+          echo "flutter.compileSdkVersion=34" >> android/local.properties
+          echo "flutter.targetSdkVersion=34" >> android/local.properties
+          echo "flutter.minSdkVersion=21" >> android/local.properties
+          echo "--- FINAL build.gradle ---"
           cat android/app/build.gradle
-      - name: Get dependencies
+      - name: Upgrade share_plus to support 34
         script: |
+          flutter pub upgrade share_plus
           flutter pub get
       - name: Build split APKs
         script: |
