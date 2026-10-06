@@ -1,0 +1,79 @@
+name: Build Trip APK FIXED
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: 'stable'
+
+      - name: Fix share_plus
+        run: |
+          python3 -c "
+          import re, pathlib
+          p = pathlib.Path('pubspec.yaml').read_text()
+          p = re.sub(r'share_plus:.*', 'share_plus: ^11.0.0', p)
+          pathlib.Path('pubspec.yaml').write_text(p)
+          "
+          rm -f pubspec.lock
+          rm -rf android
+          flutter create . --platforms=android --org com.velipoodhaam.vayvi
+          cat > android/app/build.gradle.kts << 'EOF'
+          plugins {
+              id("com.android.application")
+              id("kotlin-android")
+              id("dev.flutter.flutter-gradle-plugin")
+          }
+          android {
+              namespace = "com.velipoodhaam.vayvi"
+              compileSdk = 35
+              ndkVersion = flutter.ndkVersion
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = JavaVersion.VERSION_17.toString()
+              }
+              defaultConfig {
+                  applicationId = "com.velipoodhaam.vayvi"
+                  minSdk = 21
+                  targetSdk = 35
+                  versionCode = flutter.versionCode
+                  versionName = flutter.versionName
+              }
+              buildTypes {
+                  release {
+                      signingConfig = signingConfigs.getByName("debug")
+                  }
+              }
+          }
+          flutter {
+              source = "../.."
+          }
+          EOF
+          flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: velipoodhaam-apks
+          path: build/app/outputs/flutter-apk/*.apk
