@@ -8,13 +8,19 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: UPGRADE share_plus and FORCE 35
+      - name: FORCE UPGRADE share_plus to 11
         script: |
-          echo "--- Upgrading share_plus to latest ---"
-          cat pubspec.yaml | grep share_plus
-          sed -i.bak 's/share_plus:.*/share_plus: ^11.0.0/' pubspec.yaml || true
-          sed -i.bak 's/share_plus: ^.*/share_plus: ^11.0.0/' pubspec.yaml || true
-          grep share_plus pubspec.yaml
+          echo "BEFORE:"
+          grep -A2 -B2 share_plus pubspec.yaml || true
+          python3 -c "
+          import re, pathlib
+          p = pathlib.Path('pubspec.yaml').read_text()
+          p = re.sub(r'share_plus:.*', 'share_plus: ^11.0.0', p)
+          pathlib.Path('pubspec.yaml').write_text(p)
+          "
+          echo "AFTER:"
+          grep -A2 -B2 share_plus pubspec.yaml
+          rm -f pubspec.lock
           rm -rf android
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
           cat > android/app/build.gradle.kts << 'EOF'
@@ -51,11 +57,11 @@ workflows:
               source = "../.."
           }
           EOF
-          cat android/app/build.gradle.kts
+          flutter pub get
+          flutter pub upgrade share_plus
+          grep share_plus pubspec.lock || true
       - name: Build APK
         script: |
-          flutter pub upgrade share_plus
-          flutter pub get
           flutter build apk --release --split-per-abi --no-tree-shake-icons
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
