@@ -8,11 +8,11 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create and HARDCODE 34
+      - name: Create and FORCE 34 for ALL
         script: |
           rm -rf android
           flutter create . --platforms=android --org com.velipoodhaam.vayvi
-          echo "--- OVERWRITING build.gradle.kts WITH 34 ---"
+          # 1. Force APP to 34
           cat > android/app/build.gradle.kts << 'EOF'
           plugins {
               id("com.android.application")
@@ -47,7 +47,41 @@ workflows:
               source = "../.."
           }
           EOF
+          # 2. Force ALL LIBRARIES like share_plus to 34
+          cat > android/build.gradle.kts << 'EOF'
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          val newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
+          rootProject.layout.buildDirectory.value(newBuildDir)
+          subprojects {
+              val newSubBuildDir = newBuildDir.dir(project.name)
+              project.layout.buildDirectory.value(newSubBuildDir)
+          }
+          subprojects {
+              project.evaluationDependsOn(":app")
+          }
+          tasks.register<Delete>("clean") {
+              delete(rootProject.layout.buildDirectory)
+          }
+          subprojects {
+              afterEvaluate {
+                  if (hasProperty("android")) {
+                      val androidExtension = extensions.findByName("android")
+                      if (androidExtension is com.android.build.gradle.BaseExtension) {
+                          androidExtension.compileSdkVersion(34)
+                      }
+                  }
+              }
+          }
+          EOF
+          echo "--- APP ---"
           cat android/app/build.gradle.kts
+          echo "--- ROOT ---"
+          cat android/build.gradle.kts
       - name: Build APK
         script: |
           flutter pub get
